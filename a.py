@@ -2,8 +2,10 @@ import sys
 import csv
 import numpy as np
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.backends.backend_qt5 import NavigationToolbar2QT as NavigationToolbar
 import matplotlib.pyplot as plt
 from pyqtgraph import PlotWidget, plot
+from scipy.interpolate import interp1d
 import pyqtgraph as pg
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
@@ -64,18 +66,18 @@ class MainTab(QMainWindow):
 
     def createMenus(self):
         loadDataAction = QAction("&Load data", self,
-                            shortcut="Ctrl+L",
-                            triggered=self.onLoadDataActionClicked)
+                                 shortcut="Ctrl+L",
+                                 triggered=self.onLoadDataActionClicked)
         addDataAction = QAction("&Add data", self,
-                            shortcut="Ctrl+A",
-                            triggered=self.onAddDataActionClicked)
+                                shortcut="Ctrl+A",
+                                triggered=self.onAddDataActionClicked)
         saveAsAction = QAction("&Save as", self,
-                            shortcut="Ctrl+S",
-                            triggered=self.onSaveAsActionClicked)
+                               shortcut="Ctrl+S",
+                               triggered=self.onSaveAsActionClicked)
 
         editDataAction = QAction("&Edit data", self,
-                            shortcut="Ctrl+E",
-                            triggered=self.onEditDataActionClicked)
+                                 shortcut="Ctrl+E",
+                                 triggered=self.onEditDataActionClicked)
 
         fileMenu = QMenu("&File", self)
         fileMenu.addAction(loadDataAction)
@@ -110,10 +112,10 @@ class MainTab(QMainWindow):
     def onSaveAsActionClicked(self):
         print("Saved")
         fileFormat = 'png'
-        initialPath = QDir.currentPath()+ 'untitled.' + fileFormat
+        initialPath = QDir.currentPath() + 'untitled.' + fileFormat
         fileName, _ = QFileDialog.getSaveFileName(self, "Save As",
-                    initialPath, "%s Files (*.%s);; All Files (*)" %
-                    (fileFormat.upper(), fileFormat))
+                                                  initialPath, "%s Files (*.%s);; All Files (*)" %
+                                                  (fileFormat.upper(), fileFormat))
         screen = QApplication.primaryScreen()
         screenshot = screen.grabWindow(self.newTab.winId())
         screenshot.save(fileName, fileFormat)
@@ -131,14 +133,13 @@ class MainTab(QMainWindow):
         self.tabs.addTab(self.newTab, "Scatter Points Tab")
 
     def onScatterLinesBtnClicked(self):
-        number = 2
+        number = 3
         values = []
         for index in self.tableView.selectedIndexes():
             values.append(index.data())
 
         self.newTab = MyNewTab(self, values, number)
         self.tabs.addTab(self.newTab, "Scatter Lines Tab")
-
 
     def onLinesBtnClicked(self):
         number = 3
@@ -148,6 +149,7 @@ class MainTab(QMainWindow):
 
         self.newTab = MyNewTab(self, values, number)
         self.tabs.addTab(self.newTab, "Lines Tab")
+
 
 class MyNewTab(QWidget):
     def __init__(self, parent, values, number):
@@ -169,25 +171,26 @@ class MyNewTab(QWidget):
         x = []
         y = []
         for i in range(len(values)):
-            if i%2 == 0:
+            if i % 2 == 0:
                 x.append(int(values[i]))
             else:
                 y.append(int(values[i]))
         x = np.array(x)
         y = np.array(y)
+        view = pg.GraphicsLayoutWidget()
+        view.setBackground('w')
+        w1 = view.addPlot(title="Scatter points plot", labels={'left': "Y-axis", 'bottom': "X-axis"})
+        s1 = pg.ScatterPlotItem(size=10, pen=pg.mkPen(None), brush=pg.mkBrush(255, 0, 255, 120))
+        s1.addPoints(x, y)
 
-        self.graphWidget = pg.PlotWidget()
-        self.graphWidget.plot(x,y)
+        w1.addItem(s1)
 
-        self.graphWidget.setTitle("Scatter Points Plot")
-        self.graphWidget.setLabel('left', 'Y-axis', size=20)
-        self.graphWidget.setLabel('bottom', 'X-axis', size=20)
-
-        self.layout.addWidget(self.graphWidget)
+        self.layout.addWidget(view)
+        self.layout.addWidget(self.myNewTab)
         self.setLayout(self.myNewTab.layout)
 
     def tab2(self, values):
-        print("Tab 2")
+        print("tab2")
 
     def tab3(self, values):
         print("Tab 3")
@@ -203,7 +206,7 @@ class MyNewTab(QWidget):
 
         self.graphWidget = pg.PlotWidget()
         self.graphWidget.setBackground('w')
-        pen = pg.mkPen(color=(255,0,0))
+        pen = pg.mkPen(color=(255, 0, 0))
         self.graphWidget.plot(x, y, pen=pen)
 
         self.graphWidget.setTitle("Lines Plot")
@@ -216,11 +219,8 @@ class MyNewTab(QWidget):
         self.setLayout(self.myNewTab.layout)
 
 
-
 if __name__ == '__main__':
-
     app = QApplication(sys.argv)
     window = MainTab()
     sys.exit(app.exec_())
-
 
